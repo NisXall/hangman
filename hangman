@@ -1,4 +1,5 @@
 //this is a group miniproject assigned by instructor prepared jointl by 3 students
+// a file named "words.txt" must be make before running the c program with the words that one might ask in hangman.
 
 #include<stdio.h>
 #include <stdlib.h>
