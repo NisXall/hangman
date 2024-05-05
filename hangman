@@ -1,0 +1,217 @@
+#include<stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
+
+#define MAX_WORD_LENGTH 50
+#define MAX_TRIES 8
+
+// Function to read a random word from the file
+void getRandomWord(char *word) {
+    FILE *file = fopen("words.txt", "r");
+    if (file == NULL) {
+        printf("Error opening file.\n");
+        exit(1);
+    }
+
+    // Count the number of words in the file
+    int wordCount = 0;
+    char buffer[MAX_WORD_LENGTH];
+    while (fgets(buffer, MAX_WORD_LENGTH, file) != NULL) {
+        wordCount++;
+    }
+
+    // Reset file pointer to beginning
+    rewind(file);
+
+    // Generate a random number within the range of wordCount
+    srand(time(NULL));
+    int randomIndex = rand() % wordCount;
+
+    // Read the random word at the generated index
+    for (int i = 0; i <= randomIndex; i++) {
+        fgets(word, MAX_WORD_LENGTH, file);
+    }
+
+    // Remove newline character at the end
+    word[strlen(word) - 1] = '\0';
+
+    fclose(file);
+}
+
+// Function to display welcome screen
+void displayWelcomeScreen() {
+    printf("Welcome to Hangman!\n");
+    printf("Try to guess the word by guessing one letter at a time.\n");
+    printf("You have %d attempts to guess the word.\n", MAX_TRIES);
+    printf("Let's begin!\n\n");
+}
+
+// Function to display current status of the game
+void displayGameStatus(char *hiddenWord, int triesLeft, char *guessedLetters) {
+    printf("Word: %s\n", hiddenWord);
+    printf("Tries left: %d\n", triesLeft);
+    printf("Guessed letters: %s\n", guessedLetters);
+}
+
+// Function to update hidden word with correctly guessed letters
+void updateHiddenWord(char *word, char *hiddenWord, char letter) {
+    int length = strlen(word);
+    for (int i = 0; i < length; i++) {
+        if (word[i] == letter) {
+            hiddenWord[i] = letter;
+        }
+    }
+}
+
+// Function to check if the game is won
+bool isGameWon(char *hiddenWord) {
+    int length = strlen(hiddenWord);
+    for (int i = 0; i < length; i++) {
+        if (hiddenWord[i] == '_') {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Function to display hangman animation
+void displayHangman(int triesLeft) {
+    switch (triesLeft) {
+        case 8:
+            printf("   _______\n");
+            printf("  |/\n");
+            printf("  |\n");
+            printf("  |\n");
+            printf("  |\n");
+            printf("__|_________\n");
+            break;
+        case 7:
+            printf("   _______\n");
+            printf("  |/   | \n");
+            printf("  |\n");
+            printf("  |\n");
+            printf("  |\n");
+            printf("__|_________\n");
+            break;
+        case 6:
+            printf("   _______\n");
+            printf("  |/   | \n");
+            printf("  |    O \n");
+            printf("  |\n");
+            printf("  |\n");
+            printf("__|_________\n");
+            break;
+        case 5:
+            printf("   _______\n");
+            printf("  |/   | \n");
+            printf("  |    O \n");
+            printf("  |    |\n");
+            printf("  |\n");
+            printf("__|_________\n");
+            break;
+        case 4:
+            printf("   _______\n");
+            printf("  |/   | \n");
+            printf("  |    O \n");
+            printf("  |   /|\n");
+            printf("  |\n");
+            printf("__|_________\n");
+            break;
+        case 3:
+            printf("   _______\n");
+            printf("  |/   | \n");
+            printf("  |    O \n");
+            printf("  |   /|\\\n");
+            printf("  |\n");
+            printf("__|_________\n");
+            break;
+        case 2:
+            printf("   _______\n");
+            printf("  |/   | \n");
+            printf("  |    O \n");
+            printf("  |   /|\\\n");
+            printf("  |   /   \n");
+            printf("__|_________\n");
+            break;
+        case 1:
+            printf("   _______\n");
+            printf("  |/   |  \n");
+            printf("  |/   O  \n");
+            printf("  |       \n");
+            printf("  |   /|\\\n");
+            printf("  |   / \\\n");
+            printf("__|_________\n");
+            printf("You seem to be a good person:\nYou have one last chance to revive yourself");
+            break;
+    }
+}
+
+int main() {
+    char word[MAX_WORD_LENGTH];
+    char hiddenWord[MAX_WORD_LENGTH];
+    char guessedLetters[26];
+    int triesLeft = MAX_TRIES;
+    char playAgain;
+
+    do {
+        system("cls"); // For Linux/MacOS. Use "cls" for Windows
+        displayWelcomeScreen();
+
+        // Read a random word from the file
+        getRandomWord(word);
+
+        // Initialize the game
+        memset(hiddenWord, '_', strlen(word));
+        hiddenWord[strlen(word)] = '\0';
+        memset(guessedLetters, '\0', sizeof(guessedLetters));
+        triesLeft = MAX_TRIES;
+
+        // Main game loop
+        while (triesLeft > 0 && !isGameWon(hiddenWord)) {
+            // Display game status
+            displayGameStatus(hiddenWord, triesLeft, guessedLetters);
+            displayHangman(triesLeft);
+
+            // Get user input
+            printf("Enter a letter: ");
+            char guess;
+            scanf(" %c", &guess);
+
+            // Check if the letter has already been guessed
+            if (strchr(guessedLetters, guess) != NULL) {
+                printf("You've already guessed that letter!\n");
+                continue;
+            }
+
+            // Update guessed letters
+            guessedLetters[strlen(guessedLetters)] = guess;
+
+            // Check if the guessed letter is in the word
+            if (strchr(word, guess) != NULL) {
+                printf("Correct guess!\n");
+                updateHiddenWord(word, hiddenWord, guess);
+            } else {
+                printf("Incorrect guess!\n");
+                triesLeft--;
+            }
+        }
+
+        // Display final result
+        system("cls"); // For Linux/MacOS. Use "cls" for Windows
+        if (isGameWon(hiddenWord)) {
+            printf("Congratulations! You've guessed the word: %s\n", word);
+        } else {
+            printf("Sorry, you've run out of tries. The word was: %s\n", word);
+        }
+
+        // Ask user if they want to play again
+        printf("Do you want to play again? (y/n): ");
+        scanf(" %c", &playAgain);
+    } while (playAgain == 'y' || playAgain == 'Y');
+
+    printf("Thanks for playing Hangman!\n");
+
+    return 0;
+}
